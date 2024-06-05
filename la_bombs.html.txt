@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA Bombs</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: black; }
+        canvas { display: block; }
+        .emoji { font-size: 50px; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const emoji = '💣';
+        const letterPositions = {
+            L: [{x: 100, y: 100}, {x: 100, y: 200}, {x: 100, y: 300}, {x: 100, y: 400}, {x: 200, y: 400}],
+            A: [{x: 300, y: 400}, {x: 350, y: 300}, {x: 400, y: 200}, {x: 450, y: 300}, {x: 500, y: 400}, {x: 375, y: 300}, {x: 425, y: 300}]
+        };
+
+        function drawEmoji(x, y) {
+            ctx.font = '50px serif';
+            ctx.fillText(emoji, x, y);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const letter in letterPositions) {
+                letterPositions[letter].forEach(pos => {
+                    drawEmoji(pos.x, pos.y);
+                });
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function explodeEmoji(x, y) {
+            const particles = [];
+            for (let i = 0; i < 100; i++) {
+                particles.push(new Particle(x, y));
+            }
+            return particles;
+        }
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = 2;
+                this.speedX = (Math.random() - 0.5) * 5;
+                this.speedY = (Math.random() - 0.5) * 5;
+                this.alpha = 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha -= 0.02;
+            }
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        let particles = [];
+        canvas.addEventListener('click', (e) => {
+            particles = particles.concat(explodeEmoji(e.clientX, e.clientY));
+        });
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((particle, index) => {
+                particle.update();
+                particle.draw();
+                if (particle.alpha <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+            requestAnimationFrame(render);
+        }
+
+        animate();
+        render();
+    </script>
+</body>
+</html>
